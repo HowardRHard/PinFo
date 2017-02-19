@@ -1,0 +1,39 @@
+<LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        xmlns:android="http://schemas.android.com/apk/res/android" >
+     <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            xmlns:android="http://schemas.android.com/apk/res/android" >
+
+            <EditText
+                android:layout_width="274dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/editText" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=";)"
+                android:id="@+id/searchMarker"
+                android:layout_gravity="right"
+                android:onClick="searchMarker" />
+        </LinearLayout>
+
+        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:map="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="385dp"
+            android:layout_height="wrap_content"
+            tools:context="com.howardhardy.pinfo.MapsActivity" />
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"></TableRow>
+
+</LinearLayout>
