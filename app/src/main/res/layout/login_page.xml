@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="1"
+    android:baselineAligned="false">
+
+
+    <Button
+        android:text="Enter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="80dp"
+        android:layout_marginRight="40dp"
+        android:layout_marginLeft="40dp"
+        android:id="@+id/loginBtn"
+        android:elevation="0dp"
+        android:background="@android:color/holo_orange_light"
+        android:layout_below="@+id/passBox"
+        android:layout_alignParentStart="true" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:ems="10"
+        android:id="@+id/passBox"
+        android:text="Mypass"
+        android:textAppearance="@android:style/TextAppearance.Holo.Medium"
+        android:layout_marginTop="27dp"
+        android:layout_below="@+id/emailBox"
+        android:textCursorDrawable="@null"
+        android:textColor="@android:color/holo_orange_light"
+        style="@android:style/Widget.Holo.Light.EditText"
+        android:layout_alignStart="@+id/loginBtn"
+        android:layout_alignEnd="@+id/loginBtn" />
+
+    <Button
+        android:text="Sign Up"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/signBtn"
+        android:background="@android:color/holo_orange_dark"
+        android:layout_marginEnd="13dp"
+        android:layout_marginBottom="15dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textEmailAddress"
+        android:ems="10"
+        android:layout_marginTop="67dp"
+        android:id="@+id/emailBox"
+        android:text="HowardrHardy@googlemail.com"
+        android:textAppearance="@android:style/TextAppearance.Holo.Medium"
+        android:textCursorDrawable="@null"
+        android:textColor="@android:color/holo_orange_light"
+        style="@android:style/Widget.Holo.Light.EditText"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/passBox"
+        android:layout_alignEnd="@+id/passBox">
+
+    </EditText>
+
+</RelativeLayout>
