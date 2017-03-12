@@ -21,12 +21,14 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.firebase.client.Firebase;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -48,6 +50,7 @@ import java.util.Map;
 
 import static com.howardhardy.pinfo.R.id.email;
 import static com.howardhardy.pinfo.R.id.password;
+import static com.howardhardy.pinfo.R.id.plain;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -59,6 +62,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final String TAG = "MapsActivity";
     FirebaseDatabase database = FirebaseDatabase.getInstance();
 
+    private String userEmail;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +74,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        //Used to get the users email
+        Intent intent = getIntent();
+        userEmail = intent.getStringExtra("userEmail");
 
         reqPermissions();
     }
@@ -121,27 +130,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    public void putPin(LatLng pin, String place){
+    public void putPin(LatLng pin, String place, String Message){
         if(!(pin.equals(null))){
 
-            mMap.addMarker(new MarkerOptions().position(pin).title(place));
-            //mMap.moveCamera(CameraUpdateFactory.newLatLng(pin));
+            //Sets up the pin with its properties
+            Marker marker = mMap.addMarker(
+                                new MarkerOptions()
+                                    .position(pin)
+                                    .title(place)
+                                    .snippet(Message));
 
+            //marker.showInfoWindow();
         }
     }
 
     public void readPins(){
-        DatabaseReference readRef = database.getReference("pins/");
-        readRef.addValueEventListener(new ValueEventListener() {
+        DatabaseReference readPinRef = database.getReference().child("pins");
+        readPinRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot){
 
                 for(DataSnapshot data : dataSnapshot.getChildren()){
-                    Double Lat = (Double) data.child("latitude").getValue();
-                    Double Long = (Double) data.child("longitude").getValue();
-                    LatLng lalo = new LatLng(Lat, Long);
+                    String Lat = (String) data.child("Latitude").getValue();
+                    String Long = (String) data.child("Longitude").getValue();
+                    String message = (String) data.child("Message").getValue();
+                    String place = (String) data.child("Place").getValue();
 
-                    putPin(lalo,data.getKey());
+                    LatLng lalo = new LatLng(Double.parseDouble(Lat), Double.parseDouble(Long));
+
+                    putPin(lalo, place, message);
                 }
 
             }
@@ -155,16 +172,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    public void savePin(LatLng pin, String pinNo){
+    public void savePin(LatLng pin, String placeName, String message){
 
-        // Write a message to the database
-        DatabaseReference myRef = database.getReference("pins/" + pinNo);
-        myRef.setValue(pin);
+        DatabaseReference postPinRef = database.getReference().child("pins");
+
+        Map<String, String> values = new HashMap<String, String>();
+
+        //Putting the values into the hashmap to then be put into the database, with push. Giving a unique id
+        values.put("Place", placeName);
+        values.put("Latitude", String.valueOf(pin.latitude));
+        values.put("Longitude", String.valueOf(pin.longitude));
+        values.put("Message", message);
+        values.put("Rating", String.valueOf(1.0));
+        values.put("Email", userEmail);
+        postPinRef.push().setValue(values);
+
+        /*//Write a message to the database
+        DatabaseReference myRef = database.getReference("pins/" + placeName);
+        myRef.setValue(pin);*/
+
     }
 
     public void searchMarker(View view){
         EditText editText = (EditText)findViewById(R.id.editText);
         String location = editText.getText().toString();
+        String message = "Hello, this is the message for this pin.";
         List<Address> addressList = null;
 
         if(!(location.equals(null) || location.equals("")))
@@ -178,8 +210,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             Address address = addressList.get(0);
             LatLng ll = new LatLng(address.getLatitude(),address.getLongitude());
-            savePin(ll, address.getFeatureName());
-            putPin(ll, address.getFeatureName());
+            savePin(ll, address.getFeatureName(), message);
+            putPin(ll, address.getFeatureName(), message);
         }
 
     }

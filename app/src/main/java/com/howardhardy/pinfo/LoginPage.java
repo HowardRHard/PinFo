@@ -1,5 +1,6 @@
 package com.howardhardy.pinfo;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,7 +27,6 @@ public class LoginPage  extends FragmentActivity {
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private static final String TAG = "LoginPage";
-    private FirebaseUser user;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,38 +53,45 @@ public class LoginPage  extends FragmentActivity {
         final Button loginBtn = (Button) findViewById(R.id.loginBtn);
         loginBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick (View v){
-               // Toast.makeText(LoginPage.this, "Login here.",
-               //         Toast.LENGTH_SHORT).show();
 
+                //The credentials text boxes
                 final EditText emailEdit = (EditText) findViewById(R.id.emailBox);
-                String emailString = emailEdit.getText().toString();
-
                 final EditText passEdit = (EditText) findViewById(R.id.passBox);
+
+                //Collects the values from the text boxes
+                String emailString = emailEdit.getText().toString();
                 String passString = passEdit.getText().toString();
 
-                signIn(emailString, passString);
+                //ensures that the user has entered some data
+                if(!(emailString.equals(null) || passString.equals(null))){
+                    signIn(emailString, passString);
+                }
+
             }
         });
 
-        final Button signBtn = (Button) findViewById(R.id.signBtn);
-        signBtn.setOnClickListener(new View.OnClickListener(){
+        Button goToSignUpBtn = (Button) findViewById(R.id.goToSignUpBtn);
+        goToSignUpBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick (View v){
-
-                final EditText emailEdit = (EditText) findViewById(R.id.emailBox);
-                String emailString = emailEdit.getText().toString();
-
-                final EditText passEdit = (EditText) findViewById(R.id.passBox);
-                String passString = passEdit.getText().toString();
-
-                createAccount(emailString, passString);
-
-                //Toast.makeText(LoginPage.this, "Sign up here.",
-                //        Toast.LENGTH_SHORT).show();
+                Intent i = new Intent(new Intent(LoginPage.this, SignActivity.class));
+                startActivityForResult(i,0);
+                //setContentView(R.layout.signup_page);
             }
         });
+
     }
 
-
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode){
+            case 0:
+                if(resultCode == Activity.RESULT_OK){
+                    String d = data.getStringExtra("emailPass");
+                    String[] credentials = new String[1];
+                    credentials = d.split("  ");
+                    this.createAccount(credentials[0], credentials[1]);
+                }
+        }
+    }
 
     @Override
     public void onStart() {
@@ -122,7 +129,7 @@ public class LoginPage  extends FragmentActivity {
                 });
     }
 
-    public void signIn(String email, String password){
+    public void signIn(final String email, String password){
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -140,7 +147,9 @@ public class LoginPage  extends FragmentActivity {
                         else{
                             Toast.makeText(LoginPage.this, "Authentication success.",
                                     Toast.LENGTH_SHORT).show();
+
                             Intent i = new Intent(LoginPage.this, MapsActivity.class);
+                            i.putExtra("userEmail", email);
                             startActivity(i);
                             setContentView(R.layout.activity_maps);
 
@@ -149,9 +158,4 @@ public class LoginPage  extends FragmentActivity {
                     }
                 });
     }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 }

@@ -3,6 +3,8 @@
 
     <string name="app_name">PinFo</string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_sign">Sign</string>
+    <string name="title_activity_login">Login</string>
     <string name="title_activity_sidebar">Sidebar</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
