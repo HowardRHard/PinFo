@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
@@ -16,17 +17,21 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.load.engine.Resource;
 import com.firebase.client.Firebase;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -52,7 +57,7 @@ import static com.howardhardy.pinfo.R.id.email;
 import static com.howardhardy.pinfo.R.id.password;
 import static com.howardhardy.pinfo.R.id.plain;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.InfoWindowAdapter {
 
     private static final int REQUEST_CODE_ASK_PERMISSIONS = 7;
     private boolean activePermission = false;
@@ -62,8 +67,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final String TAG = "MapsActivity";
     FirebaseDatabase database = FirebaseDatabase.getInstance();
 
+    //The current users email
     private String userEmail;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,17 +135,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    public void putPin(LatLng pin, String place, String Message){
+    public void putPin(LatLng pin, String place, String Message, String email){
+
+        float bit = BitmapDescriptorFactory.HUE_ORANGE;
+
+        if(email.equals(userEmail))
+        {
+            bit = BitmapDescriptorFactory.HUE_BLUE;
+        }
+
+
         if(!(pin.equals(null))){
 
-            //Sets up the pin with its properties
+            //Sets up the pin with its propertioes
             Marker marker = mMap.addMarker(
                                 new MarkerOptions()
                                     .position(pin)
                                     .title(place)
-                                    .snippet(Message));
+                                    .snippet(Message)
+                                    .icon(BitmapDescriptorFactory.defaultMarker(bit)));
 
-            //marker.showInfoWindow();
+            mMap.setInfoWindowAdapter(this);
         }
     }
 
@@ -155,10 +170,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     String Long = (String) data.child("Longitude").getValue();
                     String message = (String) data.child("Message").getValue();
                     String place = (String) data.child("Place").getValue();
+                    String email = (String) data.child("Email").getValue();
 
                     LatLng lalo = new LatLng(Double.parseDouble(Lat), Double.parseDouble(Long));
 
-                    putPin(lalo, place, message);
+                    putPin(lalo, place, message, email);
                 }
 
             }
@@ -211,7 +227,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Address address = addressList.get(0);
             LatLng ll = new LatLng(address.getLatitude(),address.getLongitude());
             savePin(ll, address.getFeatureName(), message);
-            putPin(ll, address.getFeatureName(), message);
+            putPin(ll, address.getFeatureName(), message, userEmail);
         }
 
     }
@@ -235,6 +251,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return location.getLongitude();
             }
         }
+        return null;
+    }
+
+    @Override
+    public View getInfoWindow(Marker marker) {
+
+        //This creates the view of the custom infowindow
+        View view = getLayoutInflater().inflate(R.layout.info_window, null, false);
+
+        //The fields in the custom infowindow
+        TextView place = (TextView) view.findViewById(R.id.layoutPlaceName);
+        TextView desc = (TextView) view.findViewById(R.id.layoutDescription);
+
+        //Then the fields are given the correct values
+        place.setText(marker.getTitle());
+        desc.setText(marker.getSnippet());
+
+        return view;
+    }
+
+    @Override
+    public View getInfoContents(Marker marker) {
         return null;
     }
 }
