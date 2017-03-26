@@ -31,6 +31,8 @@ public class LoginPage  extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_page);
+
+
         //Tracking sign in and outo
         mAuth = FirebaseAuth.getInstance();
 
@@ -152,7 +154,6 @@ public class LoginPage  extends FragmentActivity {
                             i.putExtra("userEmail", email);
                             startActivity(i);
                             setContentView(R.layout.activity_maps);
-
                         }
 
                     }

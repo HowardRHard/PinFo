@@ -4,4 +4,5 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="transbackground">#5000</color>
+    <color name="topBanner">#FFB732</color>
 </resources>

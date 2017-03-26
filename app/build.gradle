@@ -42,6 +42,9 @@ dependencies {
     //For my importing of the Firebase variable, in MapsActivity (involved with saving with push();)
     compile 'com.firebase:firebase-client-android:2.5.0'
     testCompile 'junit:junit:4.12'
+    //Live infoWindows from Appolica
+    compile 'com.appolica:interactive-info-window:1.0.5'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
 }
 
 //For Firebase
