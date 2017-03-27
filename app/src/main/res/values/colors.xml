@@ -5,4 +5,6 @@
     <color name="colorAccent">#FF4081</color>
     <color name="transbackground">#5000</color>
     <color name="topBanner">#FFB732</color>
+    <color name="listItemSidebar">#FFBE46</color>
+    <color name="dividersSidebar">#FFA500</color>
 </resources>

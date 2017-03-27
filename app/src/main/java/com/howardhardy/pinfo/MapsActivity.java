@@ -19,6 +19,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -66,7 +68,7 @@ import static com.howardhardy.pinfo.R.id.email;
 import static com.howardhardy.pinfo.R.id.password;
 import static com.howardhardy.pinfo.R.id.plain;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.InfoWindowAdapter{
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.InfoWindowAdapter{
 
     private static final int REQUEST_CODE_ASK_PERMISSIONS = 7;
     private boolean activePermission = false;
@@ -96,42 +98,50 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mAuth = FirebaseAuth.getInstance();
         mUser = mAuth.getCurrentUser();
 
-        currEmail = mUser.getEmail();
-        //If there is no user then switch to the login
+        try{
 
-        if(mUser == null) {
+            if(mUser.equals(null)){}
+        }
+        catch(NullPointerException n){
+            //If there is no user then switch to the login
             //User not Signed in, provide them the opportunity to
             startActivity(new Intent(MapsActivity.this, LoginPage.class)); //Go to login page
             finish();
             return;
         }
+
         //If there is just continue setting up the main maps page
-        else {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_maps);
+        currEmail = mUser.getEmail();
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_maps);
 
-            //Fills the drawer with its variables
-            drawerTitles = getResources().getStringArray(R.array.drawer_titles);
-            drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-            drawerList = (ListView) findViewById(R.id.left_drawer);
+        //Fills the drawer with its variables
+        drawerTitles = getResources().getStringArray(R.array.drawer_titles);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerList = (ListView) findViewById(R.id.left_drawer);
 
-            SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                    .findFragmentById(R.id.map);
-            mapFragment.getMapAsync(this);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
 
-            //Used to place the users pin if they have input one
-            Intent intent = getIntent();
-            pinDescription = intent.getStringExtra("pinDescription");
-            pinLocation = intent.getStringExtra("pinLocationTyped");
-            pinCurrentLocation = intent.getBooleanExtra("pinCurrentLoc", false);
+        //Sets up the toolbar
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.pinfoToolbar);
+        setSupportActionBar(myToolbar);
 
-            if(pinDescription != null) {
-                    searchMarker(pinCurrentLocation, pinLocation , pinDescription);
-            }
 
-            reqPermissions();
+        //Used to place the users pin if they have input one
+        Intent intent = getIntent();
+        pinDescription = intent.getStringExtra("pinDescription");
+        pinLocation = intent.getStringExtra("pinLocationTyped");
+        pinCurrentLocation = intent.getBooleanExtra("pinCurrentLoc", false);
+
+        if(pinDescription != null) {
+                searchMarker(pinCurrentLocation, pinLocation , pinDescription);
         }
+
+        reqPermissions();
+
     }
 
     @Override
