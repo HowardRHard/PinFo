@@ -24,6 +24,7 @@ import android.widget.Toast;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.AutocompletePrediction;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
@@ -53,6 +54,7 @@ public class PinFragment extends Fragment {
     Context fragContext;
 
     private EditText locTextView;
+    private CharSequence locationAddress;
 
     public PinFragment() {
 
@@ -122,6 +124,7 @@ public class PinFragment extends Fragment {
                             i.putExtra("pinLocationTyped", locTextView.getText().toString());
                             i.putExtra("pinDescription", descTextView.getText().toString());
                             i.putExtra("pinCurrentLoc", locCheck.isChecked());
+                            i.putExtra("pinAddressFull", locationAddress);
                             startActivity(i);
                         }
                         else {
@@ -144,8 +147,12 @@ public class PinFragment extends Fragment {
         if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(fragContext, data);
+                //AutocompletePrediction acp = new AutocompletePrediction() {
+                //}
                 CharSequence placeName = place.getName();
+                locationAddress = place.getAddress();
                 locTextView.setText(placeName);
+
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(fragContext, data);
                 // TODO: Handle the error.

@@ -30,6 +30,7 @@ public class SignActivity extends FragmentActivity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.signup_page);
 
         //Tracking sign in and outo
         mAuth = FirebaseAuth.getInstance();

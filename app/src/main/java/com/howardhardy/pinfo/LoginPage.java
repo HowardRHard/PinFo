@@ -50,6 +50,7 @@ public class LoginPage  extends FragmentActivity {
                     //setContentView(R.layout.login_page);
                 }
             }
+
         };
 
         final Button loginBtn = (Button) findViewById(R.id.loginBtn);
