@@ -34,7 +34,7 @@
         android:inputType="textPassword"
         android:ems="10"
         android:id="@+id/passBottom"
-        android:text="Mypass"
+        android:text=""
         android:textAppearance="@android:style/TextAppearance.Holo.Medium"
         android:textCursorDrawable="@null"
         android:textColor="@android:color/holo_orange_light"
@@ -50,7 +50,7 @@
         android:inputType="textPassword"
         android:ems="10"
         android:id="@+id/passTop"
-        android:text="Mypass"
+        android:text=""
         android:textAppearance="@android:style/TextAppearance.Holo.Medium"
         android:textCursorDrawable="@null"
         android:textColor="@android:color/holo_orange_light"
@@ -72,9 +72,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/emailLbl"
-        android:layout_below="@+id/error_msg"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="57dp" />
+        android:layout_marginBottom="6dp"
+        android:layout_above="@+id/emailTop"
+        android:layout_centerHorizontal="true" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -82,14 +82,15 @@
         android:inputType="textEmailAddress"
         android:ems="10"
         android:id="@+id/emailTop"
-        android:text="HowardrHardy@googlemail.com"
+        android:text=""
         android:textAppearance="@android:style/TextAppearance.Holo.Medium"
         android:textCursorDrawable="@null"
         android:textColor="@android:color/holo_orange_light"
         style="@android:style/Widget.Holo.Light.EditText"
-        android:layout_below="@+id/emailLbl"
-        android:layout_alignStart="@+id/emailBottom"
-        android:layout_alignEnd="@+id/passTop">
+        android:layout_marginBottom="10dp"
+        android:layout_above="@+id/emailBottom"
+        android:layout_alignEnd="@+id/emailBottom"
+        android:layout_alignStart="@+id/emailBottom">
 
     </EditText>
 
@@ -99,15 +100,14 @@
         android:inputType="textEmailAddress"
         android:ems="10"
         android:id="@+id/emailBottom"
-        android:text="HowardrHardy@googlemail.com"
+        android:text=""
         android:textAppearance="@android:style/TextAppearance.Holo.Medium"
         android:textCursorDrawable="@null"
         android:textColor="@android:color/holo_orange_light"
         style="@android:style/Widget.Holo.Light.EditText"
-        android:layout_below="@+id/emailTop"
+        android:layout_marginBottom="73dp"
+        android:layout_above="@+id/passwordLbl"
         android:layout_alignStart="@+id/passTop"
-        android:layout_marginTop="15dp"
-        android:layout_toStartOf="@+id/backBtn"
         android:layout_alignEnd="@+id/passTop">
 
     </EditText>
@@ -122,5 +122,26 @@
         android:layout_marginBottom="18dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/textView7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter Full Name:"
+        android:layout_marginTop="13dp"
+        android:layout_below="@+id/error_msg"
+        android:layout_alignEnd="@+id/passwordLbl" />
+
+    <EditText
+        android:id="@+id/fullNameEditText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/emailTop"
+        android:textColor="@android:color/holo_orange_light"
+        android:layout_alignStart="@+id/emailTop"
+        android:layout_below="@+id/textView7"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="" />
 
 </RelativeLayout>

@@ -20,5 +20,8 @@
     <string name="title_activity_side_m">SideM</string>
     <string name="title_activity_smenu">SMenu</string>
 
+    <string name="drawer_open">Drawer open</string>
+    <string name="drawer_close">Drawer close</string>
+
     <string name="server_client_id">971537010494-6ir8fkl4nvp8a1h9rpr8sgai6o8fl949.apps.googleusercontent.com</string>
 </resources>

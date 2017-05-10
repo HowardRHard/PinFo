@@ -11,13 +11,13 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -27,7 +27,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -45,11 +44,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.InfoWindowAdapter{
 
@@ -71,20 +70,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     //Database Instance / Reference
     private static final String TAG = "MapsActivity";
     FirebaseDatabase database = FirebaseDatabase.getInstance();
+    private FirebaseAuth mAuth;
+    private FirebaseUser mUser;
 
     //The current users pin infomation if it has been input
     private String pinLocation;
     private Boolean pinCurrentLocation;
     private String pinDescription;
+    private String pinTitle;
     private String pinAddressFull;
+
+    private String fullName;
 
     //These are for the navigation drawer
     private String[] drawerTitles;
     private DrawerLayout drawerLayout;
     private ListView drawerList;
-    private FirebaseAuth mAuth;
-    private FirebaseUser mUser;
 
+    //Needed for getting a persons score as well as their pins
+    private List<ArrayList<String>> arrayListOfLists;
+
+    //Current user logged in
     private String currEmail;
 
 
@@ -96,16 +102,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //Gets the instance of the current user logged in
         mAuth = FirebaseAuth.getInstance();
         mUser = mAuth.getCurrentUser();
+        arrayListOfLists = getCurrentUsersPins();
 
-        try{
-
-            if(mUser.equals(null)){}
-        }
+        try{if(mUser.equals(null)){}}
         catch(NullPointerException n){
             //If there is no user then switch to the login
             //User not Signed in, provide them the opportunity to
             startActivity(new Intent(MapsActivity.this, LoginPage.class)); //Go to login page
-            //finish();
             return;
         }
 
@@ -121,25 +124,66 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-
         //Sets up the toolbar
         Toolbar myToolbar = (Toolbar) findViewById(R.id.pinfoToolbar);
+
+        ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, myToolbar, R.string.drawer_open, R.string.drawer_close) {
+            public void onDrawerClosed(View v){
+                super.onDrawerClosed(v);
+                invalidateOptionsMenu();
+                syncState();
+            }
+            public void onDrawerOpened(View v){
+                super.onDrawerOpened(v);
+                invalidateOptionsMenu();
+                syncState();
+            }
+        };
+
+        drawerLayout.setDrawerListener(drawerToggle);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        drawerToggle.syncState();
+
+
 
         //Used to place the users pin if they have input one
         Intent intent = getIntent();
         pinDescription = intent.getStringExtra("pinDescription");
+        pinTitle = intent.getStringExtra("pinTitle");
         pinLocation = intent.getStringExtra("pinLocationTyped");
         pinCurrentLocation = intent.getBooleanExtra("pinCurrentLoc", false);
         pinAddressFull = intent.getStringExtra("pinAddressFull");
 
-        if(pinDescription != null) {
-                searchMarker(pinCurrentLocation, pinLocation , pinDescription, pinAddressFull);
-        }
+        //Collects the users name used for the profile page
+        fullName = intent.getStringExtra("fullName");
 
+        //Adds the user to the database
+        if(fullName != null)
+            addUser(currEmail, fullName);
+
+        //If the user has made a new pin, then make sure to add it
+        if(pinDescription != null)
+                searchMarker(pinCurrentLocation, pinLocation , pinDescription, pinTitle, pinAddressFull);
+
+        //Request permissions for the users location data
         reqPermissions();
+    }
 
+    @Override
+    //Used to Open and close the drawer
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch(item.getItemId()){
+            case android.R.id.home: {
+                if(drawerLayout.isDrawerOpen(drawerList))
+                    drawerLayout.closeDrawer(drawerList);
+                else
+                    drawerLayout.openDrawer(drawerList);
+                return true;
+            }
+            default: return super.onOptionsItemSelected(item);
+        }
     }
 
     public static int getPixelsFromDp(Context context, float dp) {
@@ -151,7 +195,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        //If the user has the permissions, set up the map
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+            //Get the users location and then zoom in closer to it
             mMap.setMyLocationEnabled(true);
             Double[] ll = new Double[]{getLat(),getLong()};
             LatLng lalo = new LatLng(ll[0], ll[1]);
@@ -161,6 +207,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lalo, 16));
             }
 
+            //Get the pins from the database and put them on the map
             readPins();
         }
 
@@ -170,8 +217,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Set the list's click listener
         drawerList.setOnItemClickListener(new DrawerItemClickListener());
-
-
 
         //This code that follows is used to create an extension to infowindows,
         //not only making them custom but also allows for the live click of
@@ -183,8 +228,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 20 - offset between the default InfoWindow bottom edge and it's content bottom edge
         mapWrapperLayout.init(mMap, getPixelsFromDp(this, 39 + 20));
 
-        // We want to reuse the info window for all the markers,
-        // so let's create only one class member instance
+       //enables the reuse of the infowindow
         this.infoWindow = (ViewGroup)getLayoutInflater().inflate(R.layout.info_window, null);
         this.infoTitle = (TextView)infoWindow.findViewById(R.id.layoutPlaceName);
         this.infoMessage = (TextView)infoWindow.findViewById(R.id.layoutDescription);
@@ -193,57 +237,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         this.infoRating = (TextView)infoWindow.findViewById(R.id.layoutRating);
 
         //The up vote button lister
-        this.infoButtonListener = new OnInfoWindowElemTouchListener(infoUpButton,
-                getResources().getDrawable(R.drawable.btn_default_normal_holo_light),
-                getResources().getDrawable(R.drawable.btn_default_pressed_holo_light))
+        this.infoButtonListener = new OnInfoWindowElemTouchListener(infoUpButton)
         {
             @Override
             protected void onClickConfirmed(View v, Marker marker) {
-                // Here we can perform some action triggered after clicking the button
-                Toast.makeText(MapsActivity.this, "Up!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "+1", Toast.LENGTH_SHORT).show();
                 marker = mapWrapperLayout.getMarker();
                 votePin(marker, 1);
-                String s = "Test";
-                //getInfoWindow(marker);
-                /*    if(successful.equals("true")){
-                        String oldR = (String) marker.getTag();
-                        int newR = Integer.getInteger(oldR);
-                        newR++;
-                        marker.setTag(String.valueOf(newR));
-                        infoRating.setText(marker.getTag().toString());
-                        mapWrapperLayout.setMarkerWithInfoWindow(marker, infoWindow);
-                        //Remove/readdPin
-                        //marker.remove();
-                        //putPin();
-
-                    }
-                    else if(successful.equals("updated")){
-                        String oldR = (String) marker.getTag();
-                        int newR = Integer.getInteger(oldR);
-                        newR--;
-                        marker.setTag(String.valueOf(newR));
-                        infoRating.setText(marker.getTag().toString());
-                        mapWrapperLayout.setMarkerWithInfoWindow(marker, infoWindow);
-
-                    }
-                */
                 return;
             }
         };
         this.infoUpButton.setOnTouchListener(infoButtonListener);
 
         //The down vote button lister
-        this.infoButtonListener = new OnInfoWindowElemTouchListener(infoDownButton,
-                getResources().getDrawable(R.drawable.btn_default_normal_holo_light),
-                getResources().getDrawable(R.drawable.btn_default_pressed_holo_light))
+        this.infoButtonListener = new OnInfoWindowElemTouchListener(infoDownButton)
         {
             @Override
             protected void onClickConfirmed(View v, Marker marker) {
-                // Here we can perform some action triggered after clicking the button
-                Toast.makeText(MapsActivity.this, "Down!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "-1", Toast.LENGTH_SHORT).show();
                 marker = mapWrapperLayout.getMarker();
                 votePin(marker, -1);
-
                 return;
             }
         };
@@ -280,10 +293,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    //Puts a pin down on the map
     public void putPin(LatLng pin, String place, String Message, String pinEmail, String rating){
-
+        //Default colour for the pin
         float bit = BitmapDescriptorFactory.HUE_ORANGE;
 
+        //Which then changes if it is owned by the current user logged in
         if(currEmail.toLowerCase().equals(pinEmail.toLowerCase()))
         {
             bit = BitmapDescriptorFactory.HUE_BLUE;
@@ -291,7 +306,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         if(!(pin.equals(null))){
-
             //Sets up the pin with its propertioes
             Marker marker = mMap.addMarker(
                     new MarkerOptions()
@@ -301,11 +315,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             .icon(BitmapDescriptorFactory.defaultMarker(bit)));
 
             marker.setTag(rating);
-
             mMap.setInfoWindowAdapter(this);
         }
     }
 
+    //Gathers all the pins from the database then places them
     public void readPins(){
         DatabaseReference readPinRef = database.getReference().child("pins");
         readPinRef.addValueEventListener(new ValueEventListener() {
@@ -321,10 +335,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     String rating = (String) data.child("Rating").getValue();
 
                     LatLng lalo = new LatLng(Double.parseDouble(Lat), Double.parseDouble(Long));
-
                     putPin(lalo, place, message, email, rating);
                 }
-
             }
 
             @Override
@@ -332,14 +344,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Failed to read value
                 Log.w(TAG, "Failed to read value.", error.toException());
             }
-
         });
     }
 
+    //Saves an individual pin
     public void savePin(LatLng pin, String placeName, String message){
 
-        DatabaseReference postPinRef = database.getReference().child("pins");
-
+        DatabaseReference savePinRef = database.getReference().child("pins");
         Map<String, String> values = new HashMap<String, String>();
 
         //Putting the values into the hashmap to then be put into the database, with push. Giving a unique id
@@ -349,21 +360,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         values.put("Message", message);
         values.put("Rating", String.valueOf(1.0));
         values.put("Email", currEmail);
-        postPinRef.push().setValue(values);
-
-        /*//Write a message to the database
-        DatabaseReference myRef = database.getReference("pins/" + placeName);
-        myRef.setValue(pin);*/
-
+        savePinRef.push().setValue(values);
     }
 
+    //Lets a user vote on a pin if they are allowed to
     private void votePin(final Marker marker, final int value) {
-        final DatabaseReference postPinRatingRef = database.getReference().child("pins");
+        final DatabaseReference votePin = database.getReference().child("pins");
 
         final String thePlace = marker.getTitle();
         final String theMessage = marker.getSnippet();
 
-        postPinRatingRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        votePin.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot){
 
@@ -376,21 +383,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     //Checks if the user has already voted on this pin (whether it be up or down respectively)
                     String textVal = Integer.toString(value);
 
-
                     //Takes all of the pins and if they have the same email as our current user they are added to his account infomation
                     if(message.equals(theMessage) && place.equals(thePlace) ) {
-
                         float newRating = Float.parseFloat(rating) + value;
                         String textRating = Float.toString(newRating);
                         addVoteIfNotDuplicate(textVal,currentPinKey,value,textRating, marker);
-                        //postPinRatingRef.limitToFirst(1);
-
-                        //Make changes to the vote table to flag that the user has voted
-                        //addUsersVotes(value,currentPinKey);
                     }
-
                 }
-
             }
 
             @Override
@@ -402,23 +401,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    private void addVoteIfNotDuplicate(final String theVote, final String pinKey, final int value, final String textRating, final
-        Marker marker) {
-
-
+    //After some checks, this method makes a few more then adds the vote if it is allowed
+    private void addVoteIfNotDuplicate(final String theVote, final String pinKey, final int value, final String textRating, final Marker marker) {
         final DatabaseReference readVoteRef = database.getReference().child("vote");
         final DatabaseReference addVoteRef = database.getReference().child("pins");
         final DatabaseReference voteFlag = database.getReference().child("flag").child("Status");
+
         readVoteRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
+            //Sets the vote flag
             public void onDataChange(DataSnapshot dataSnapshot){
-
                 voteFlag.setValue("hasNot");
                 for(DataSnapshot data : dataSnapshot.getChildren()){
                     String email = (String) data.child("Email").getValue();
                     String vote = (String) data.child("Vote").getValue();
                     String pin = (String) data.child("Pin").getValue();
-
 
                     if(email.equals(currEmail) && pin.equals(pinKey)) {
                         if(vote.equals(theVote)){
@@ -437,16 +434,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     readVoteRef.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-
                             voteFlag.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(final DataSnapshot dataSnapshot) {
                                     final String flag = dataSnapshot.getValue(String.class);
-
                                         addVoteRef.child(pinKey).child("Rating").addListenerForSingleValueEvent(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(DataSnapshot snapshot) {
-
+                                                //If the user hasn't voted before then let them vote
                                                 if(flag.equals("hasNot")){
                                                     addUsersVotes(value,pinKey);
 
@@ -460,7 +455,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                                     infoRating.setText(marker.getTag().toString());
                                                     marker.hideInfoWindow();
                                                     marker.showInfoWindow();
+
+                                                    //Attempt at auto deletion
+
+                                                    //if(Float.valueOf(marker.getTag().toString()) > -3) {
+                                                    //    marker.remove();
+                                                    //    removePin(pinKey);
+                                                    //}
                                                 }
+                                                //If they are voting the opposite to what they voted before then let them vote
                                                 else if(flag.equals("update")){
                                                     updateUsersVote(value,pinKey);
                                                     addVoteRef.child(pinKey).child("Rating").setValue(textRating);
@@ -473,7 +476,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                                     infoRating.setText(marker.getTag().toString());
                                                     marker.hideInfoWindow();
                                                     marker.showInfoWindow();
+
+                                                    //Attempt at auto deletion
+
+                                                    //if(Float.valueOf(marker.getTag().toString()) > -3) {
+                                                    //    marker.remove();
+                                                    //    removePin(pinKey);
+                                                    //}
                                                 }
+                                                //If they are trying to revote then don't allow them to
                                                 else if(flag.equals("voted")){
                                                     voteFlag.setValue("on");
                                                 }
@@ -481,37 +492,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                                             @Override
                                             public void onCancelled(DatabaseError databaseError) {
-
                                             }
                                         });
                                 }
 
                                 @Override
                                 public void onCancelled(DatabaseError databaseError) {
-
                                 }
                             });
-
-
-
                         }
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
-
                         }
                     });
                 }
-                else
-                {
-                    addUsersVotes(1,pinKey);
+                //If the vote table hasn't even been made yet (i.e. first ever vote)
+                //Then make it and let the user vote
+                else {
+                    addUsersVotes(1, pinKey);
                     addVoteRef.child(pinKey).child("Rating").setValue(textRating);
                     marker.setTag(textRating);
-                    //infoRating.setText(marker.getTag().toString());
                     marker.hideInfoWindow();
                     marker.showInfoWindow();
                 }
-
-
             }
 
             @Override
@@ -519,20 +522,31 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Failed to read value
                 Log.w(TAG, "Failed to read value.", error.toException());
             }
-
         });
     }
 
+    //Log a users vote on a specific pin
     private void addUsersVotes(int vote, String pinKey){
-        DatabaseReference postVoteRef = database.getReference().child("vote");
+        DatabaseReference addUserVoteRef = database.getReference().child("vote");
         Map<String, String> values = new HashMap<String, String>();
-        //Putting the values into the hashmap to then be put into the database, with push. Giving a unique id
+
         values.put("Email", currEmail);
         values.put("Vote", String.valueOf(vote));
         values.put("Pin", pinKey);
-        postVoteRef.push().setValue(values);
+        addUserVoteRef.push().setValue(values);
     }
 
+    //Adds a new user to the system
+    private void addUser(String email, String fullName){
+        DatabaseReference addUserRef = database.getReference().child("user");
+        Map<String, String> values = new HashMap<String, String>();
+
+        values.put("Email", email);
+        values.put("Name", fullName);
+        addUserRef.push().setValue(values);
+    }
+
+    //Change a users vote to the opposite vote
     private void updateUsersVote(final int vote, final String pinKey){
         final DatabaseReference postUpdatedVoteRef = database.getReference().child("vote");
 
@@ -540,6 +554,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
+                //Gets the right vote then updates it
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                     String email = (String) data.child("Email").getValue();
                     String pin = (String) data.child("Pin").getValue();
@@ -553,21 +568,41 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
 
+    //This was my attempt at removing a pin, used in the auto delete part of the app
+    /*
+    private void removePin(final String key){
+        final DatabaseReference removePinRef = database.getReference().child("pin");
+
+        removePinRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                removePinRef.child(key).removeValue();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
             }
         });
 
-    }
+    } */
 
-
-    private List<String> getCurrentUsersPins() {
+    //Gets the users pins as well as their overall score
+    private List<ArrayList<String>> getCurrentUsersPins() {
 
         final List<String> usersPins = new ArrayList<String>();
+        final List<String> totalA = new ArrayList<String>();
+        final List<ArrayList<String>> arrayListOfLists = new ArrayList<ArrayList<String>>();
 
         DatabaseReference readPinRef = database.getReference().child("pins");
         readPinRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot){
+                //Initial value of the score, in case the user has no pins
+                Float total = Float.valueOf("0");
 
                 for(DataSnapshot data : dataSnapshot.getChildren()){
                     String rating = (String) data.child("Rating").getValue();
@@ -577,11 +612,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     //Takes all of the pins and if they have the same email as our current user they are added to his account infomation
                     if(email.equals(currEmail)) {
+                        //Adds the pins to the array as well as tallying up the score
                         usersPins.add("Place name: " + place + "  \n" + "Message: " + message + "  \n" + "Rating: " + rating);
+                        total = total + Float.valueOf(rating);
                     }
 
                 }
-
+                    //If the user has a score, then set it
+                    if(total != null){
+                        String s = String.valueOf(total);
+                        totalA.add(s);
+                    }
             }
 
             @Override
@@ -592,16 +633,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         });
 
-        return usersPins;
+        arrayListOfLists.add((ArrayList<String>)usersPins);
+        arrayListOfLists.add((ArrayList<String>)totalA);
+
+        return arrayListOfLists;
     }
 
-
-    public void searchMarker(boolean currentLoc, String locationTyped, String description, String pinAddressFull){
+    //The geocoding process that turns a user pin into Lat and Long coordinates
+    public void searchMarker(boolean currentLoc, String locationTyped, String description, String pinTitle, String pinAddressFull){
         List<Address> addressList = null;
         Geocoder geocoder = new Geocoder(this);
 
+        //If the user hasn't used their current location
         if(!currentLoc) {
-
             try {
                 addressList = geocoder.getFromLocationName(pinAddressFull,1);
             } catch (IOException e) {
@@ -609,13 +653,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return;
             }
 
+            //Puts the pin on the map and saves it
             Address address = addressList.get(0);
             LatLng ll = new LatLng(address.getLatitude(),address.getLongitude());
-            savePin(ll, address.getFeatureName(), description);
+            savePin(ll, pinTitle, description);
             if(mMap != null){
-                putPin(ll, address.getFeatureName(), description, currEmail, "1");
+                putPin(ll, pinTitle, description, currEmail, "1");
             }
         }
+
+        //If they have
         else {
             Double lat = getLat();
             Double lon = getLong();
@@ -625,16 +672,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 e.printStackTrace();
             }
 
+            //Puts the pin on the map and saves it
             Address address = addressList.get(0);
             LatLng ll = new LatLng(lat,lon);
-            savePin(ll, address.getFeatureName(), description);
+            savePin(ll, pinTitle, description);
             if(mMap != null){
-                putPin(ll, address.getFeatureName(), description, currEmail, "1");
+                putPin(ll, pinTitle, description, currEmail, "1");
             }
         }
 
     }
 
+    //Gets the latitude
     public Double getLat() {
         LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -646,6 +695,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return null;
     }
 
+    //Gets the longitude
     public Double getLong() {
         LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -658,62 +708,40 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
+    //Sets the custom infowindow
     public View getInfoWindow(final Marker marker) {
-
-        //This creates the view of the custom infowindow
-        //View view = getLayoutInflater().inflate(R.layout.info_window, null, false);
-
-        //Nessisary for our live infowindow
-        //Context c = this.getApplicationContext();
-
-
-        //The fields in the custom infowindow
-        //TextView place = (TextView) view.findViewById(R.id.layoutPlaceName);
-        //TextView desc = (TextView) view.findViewById(R.id.layoutDescription);
-
-        //Then the fields are given the correct values
 
         final String theTitle = marker.getTitle();
         final String theMessage = marker.getSnippet();
 
-        //updateRatingOfInfoWindow(theTitle, theMessage);
-
-        //infoRating.setTag("Added");
-
         infoTitle.setText(theTitle);
         infoMessage.setText(theMessage);
-        infoRating.setText(marker.getTag().toString());
+        String temp = marker.getTag().toString();
+        infoRating.setText(temp.substring(0, temp.indexOf(".")));
 
-        //infoRating.setText(marker.get);
-        //layoutRating.setText();
         infoButtonListener.setMarker(marker);
 
         mapWrapperLayout.setMarkerWithInfoWindow(marker, infoWindow);
 
-
         return infoWindow;
     }
 
-    private void updateRatingOfInfoWindow(final String theTitle, final String theMessage) {
-        DatabaseReference readPinRef = database.getReference().child("pins");
-        readPinRef.addListenerForSingleValueEvent(new ValueEventListener() {
+    //Sets the users name to the action bar when you change to the user account page
+    private void setUsersFullName(final String currEmail) {
+        DatabaseReference readUsersNameRef = database.getReference().child("user");
+        readUsersNameRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot){
 
                 for(DataSnapshot data : dataSnapshot.getChildren()){
-                    String rating = (String) data.child("Rating").getValue();
-                    String message = (String) data.child("Message").getValue();
-                    String place = (String) data.child("Place").getValue();
+                    String email = (String) data.child("Email").getValue();
+                    String fullName = (String) data.child("Name").getValue();
 
                     //Takes all of the pins and if they have the same email as our current user they are added to his account infomation
-                    if(message.equals(theMessage) && place.equals(theTitle)) {
-                        infoRating.setText(rating);
-                        //infoRating.setTag("Added");
-                        return;
+                    if(email.equals(currEmail)) {
+                        getSupportActionBar().setTitle(fullName);
                     }
-
                 }
-
             }
 
             @Override
@@ -721,16 +749,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Failed to read value
                 Log.w(TAG, "Failed to read value.", error.toException());
             }
-
         });
     }
+
 
     @Override
     public View getInfoContents(Marker marker) {
         return null;
     }
-
-
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
@@ -750,6 +776,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         switch(position) {
             case 0:
                 //User wants to go back to the map
+                getSupportActionBar().setTitle("Map");
                 startActivity(new Intent(this, MapsActivity.class)); //Go back to the login page
                 finish();
                 break;
@@ -762,24 +789,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 args.putInt(PinFragment.ARG_MENU_ITEM_NUMBER, position);
 
                 //Getting all the users pins and infomation
-                List<String> usersPins = getCurrentUsersPins();
-                args.putStringArrayList("list", (ArrayList<String>) usersPins);
-                args.putString("email",currEmail);
-                fragment.setArguments(args);
+                args.putStringArrayList("list", (ArrayList<String>) arrayListOfLists.get(0));
+                args.putStringArrayList("total", (ArrayList<String>) arrayListOfLists.get(1));
 
-                //removes the map fragment
-                findViewById(R.id.below_content_frame).setVisibility(View.GONE);
+                fragment.setArguments(args);
 
                 // Insert the fragment by replacing any existing fragment
                 fragmentManager = getFragmentManager();
                 fragmentManager.beginTransaction()
-                        .replace(R.id.content_frame, fragment)
+                        .replace(R.id.map, fragment)
                         .commit();
 
                 // Highlight the selected item, update the title, and close the drawer
                 drawerList.setItemChecked(position, true);
                 //setTitle(drawerTitles[position]);
                 drawerLayout.closeDrawer(drawerList);
+                setUsersFullName(currEmail);
                 break;
             case 2:
                 //User wants to add a new pin
@@ -792,18 +817,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 fragment.setArguments(args);
 
                 //removes the map fragment
-                findViewById(R.id.below_content_frame).setVisibility(View.GONE);
+                //findViewById(R.id.below_content_frame).setVisibility(View.GONE);
 
                 // Insert the fragment by replacing any existing fragment
                 fragmentManager = getFragmentManager();
                 fragmentManager.beginTransaction()
-                        .replace(R.id.content_frame, fragment)
+                        .replace(R.id.map, fragment)
                         .commit();
 
                 // Highlight the selected item, update the title, and close the drawer
                 drawerList.setItemChecked(position, true);
                 //setTitle(drawerTitles[position]);
                 drawerLayout.closeDrawer(drawerList);
+                getSupportActionBar().setTitle("New Pin");
                 break;
             case 3:
                 //User wants to logout

@@ -1,13 +1,9 @@
 package com.howardhardy.pinfo;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Address;
-import android.location.Geocoder;
 import android.os.Bundle;
-import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,32 +12,17 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.places.AutocompletePrediction;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
-import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
-import com.google.android.gms.location.places.ui.PlaceSelectionListener;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.vision.barcode.Barcode;
-import com.google.android.gms.vision.text.Text;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
 
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
-import static com.howardhardy.pinfo.R.id.auto;
 import static com.howardhardy.pinfo.R.id.checkBox;
-import static com.howardhardy.pinfo.R.id.none;
 
 /**
  * Created by Howard on 20/03/2017.
@@ -75,6 +56,7 @@ public class PinFragment extends Fragment {
             final EditText descTextView = (EditText) rootView.findViewById(R.id.descEditText);
             final Button submitPin = (Button) rootView.findViewById(R.id.submitPin);
             final TextView errTextView = (TextView) rootView.findViewById(R.id.errTextView);
+            final EditText titleTextView = (EditText) rootView.findViewById(R.id.titleEditText);
 
             //This will remove the default google search widget
             rootView.findViewById(R.id.place_autocomplete_fragment).setVisibility(View.GONE);
@@ -115,40 +97,38 @@ public class PinFragment extends Fragment {
                 }
             });
 
+            //Will allow you to post a pin if you pass the error checks
             submitPin.setOnClickListener(new View.OnClickListener(){
                 public void onClick (View v){
                     if(locCheck.isChecked() || !( locTextView.getText().toString().equals("") ) ){
                         if(!(descTextView.getText().toString().equals(""))){
-                            //Gets the maps activity and passes in the pin information to be plotted on the map
-                            Intent i = new Intent(getActivity(), MapsActivity.class);
-                            i.putExtra("pinLocationTyped", locTextView.getText().toString());
-                            i.putExtra("pinDescription", descTextView.getText().toString());
-                            i.putExtra("pinCurrentLoc", locCheck.isChecked());
-                            i.putExtra("pinAddressFull", locationAddress);
-                            startActivity(i);
+                            if(!titleTextView.getText().toString().equals("")){
+                                //Gets the maps activity and passes in the pin information to be plotted on the map
+                                Intent i = new Intent(getActivity(), MapsActivity.class);
+                                i.putExtra("pinLocationTyped", locTextView.getText().toString());
+                                i.putExtra("pinDescription", descTextView.getText().toString());
+                                i.putExtra("pinCurrentLoc", locCheck.isChecked());
+                                i.putExtra("pinTitle", titleTextView.getText().toString());
+                                i.putExtra("pinAddressFull", locationAddress);
+                                startActivity(i);
+                            }
+                            else {errTextView.setText("Please fill out the title field.");}
                         }
-                        else {
-                            errTextView.setText("Please fill out the description field.");
-                        }
+                        else {errTextView.setText("Please fill out the description field.");}
                     }
-                    else {
-                        errTextView.setText("Please fill out the location field or click the check box to use your current location instead.");
-                    }
+                    else {errTextView.setText("Please fill out the location field or click the check box to use your current location instead.");}
                 }
             });
         }
-        //getActivity().setTitle(Galaxy);
-
         return rootView;
     }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(fragContext, data);
-                //AutocompletePrediction acp = new AutocompletePrediction() {
-                //}
                 CharSequence placeName = place.getName();
                 locationAddress = place.getAddress();
                 locTextView.setText(placeName);

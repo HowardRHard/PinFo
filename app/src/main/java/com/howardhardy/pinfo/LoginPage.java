@@ -17,6 +17,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
+
 
 /**
  * Created by Howard on 24/02/2017.
@@ -27,15 +29,18 @@ public class LoginPage  extends FragmentActivity {
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private static final String TAG = "LoginPage";
+    private String fullName;
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_page);
 
-
-        //Tracking sign in and outo
+        //Tracking sign in and out
         mAuth = FirebaseAuth.getInstance();
 
+
+        //Checks the users login status
          mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -43,16 +48,15 @@ public class LoginPage  extends FragmentActivity {
                 if (user != null) {
                     // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
-                    //setContentView(R.layout.activity_maps);
                 } else {
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
-                    //setContentView(R.layout.login_page);
                 }
             }
 
         };
 
+        //Lets the user login if they are authorised to do so
         final Button loginBtn = (Button) findViewById(R.id.loginBtn);
         loginBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick (View v){
@@ -73,17 +77,18 @@ public class LoginPage  extends FragmentActivity {
             }
         });
 
+        //Takes the user to the sign up page
         Button goToSignUpBtn = (Button) findViewById(R.id.goToSignUpBtn);
         goToSignUpBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick (View v){
                 Intent i = new Intent(new Intent(LoginPage.this, SignActivity.class));
                 startActivityForResult(i,0);
-                //setContentView(R.layout.signup_page);
             }
         });
 
     }
 
+    //Creates the account by formating the data correctly the calling the create account method
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode){
             case 0:
@@ -92,6 +97,8 @@ public class LoginPage  extends FragmentActivity {
                     String[] credentials = new String[1];
                     credentials = d.split("  ");
                     this.createAccount(credentials[0], credentials[1]);
+
+                    fullName =  data.getStringExtra("fullName");
                 }
         }
     }
@@ -110,6 +117,7 @@ public class LoginPage  extends FragmentActivity {
         }
     }
 
+    //Creates the users account
     public void createAccount(String email, String password){
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -121,7 +129,7 @@ public class LoginPage  extends FragmentActivity {
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
                         if (!task.isSuccessful()) {
-                            Toast.makeText(LoginPage.this, "Authentication failed.",
+                            Toast.makeText(LoginPage.this, "Authentication failed,  please try again.",
                                     Toast.LENGTH_SHORT).show();
                         }
                         else{
@@ -132,8 +140,14 @@ public class LoginPage  extends FragmentActivity {
                 });
     }
 
-    public void signIn(final String email, String password){
-        mAuth.signInWithEmailAndPassword(email, password)
+    //Performs some error checking then lets the user login if they pass the checks
+    public void signIn(final String email, String password) {
+        final TextView err = (TextView) findViewById(R.id.err);
+        if (email.equals("")) {err.setText("Please fill out the email field");}
+        else {
+            if (password.equals("")) {err.setText("Please fill out the password field");}
+            else {
+                mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
@@ -144,20 +158,22 @@ public class LoginPage  extends FragmentActivity {
                         // signed in user can be handled in the listener.
                         if (!task.isSuccessful()) {
                             Log.w(TAG, "signInWithEmail", task.getException());
-                            Toast.makeText(LoginPage.this, "Authentication failed.",
+                            Toast.makeText(LoginPage.this, "Authentication failed, please try again.",
                                     Toast.LENGTH_SHORT).show();
-                        }
-                        else{
+                        } else {
                             Toast.makeText(LoginPage.this, "Authentication success.",
                                     Toast.LENGTH_SHORT).show();
 
                             Intent i = new Intent(LoginPage.this, MapsActivity.class);
                             i.putExtra("userEmail", email);
+                            i.putExtra("fullName", fullName);
                             startActivity(i);
                             setContentView(R.layout.activity_maps);
                         }
 
                     }
                 });
+            }
+        }
     }
 }
