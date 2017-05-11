@@ -5,7 +5,7 @@ A location based Android application that allows users to share points of intere
 
 
 ## About PinFo
-PinFo is an application that I developed for my final year project at university. At its core PinFo aims to improve users' lives. It does this by providing them with the extra detail about their surroundings. Allowing them to discover new people, meet  without the risk of disappointment.
+PinFo is an application that I developed for my final year project at university. At its core PinFo aims to improve users' lives. It does this by providing them with the extra detail about their surroundings. Allowing them to meet new people and discover new places without the risk of disappointment.
 
 
 ## Features
