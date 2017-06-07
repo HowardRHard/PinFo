@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.howardhardy.pinfo">
+    package="com.howardhardy.pinfo.experimental">
 
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
@@ -18,6 +18,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:icon="@mipmap/ic_launcher">
+        android:name="android.support.multidex.MultiDexApplication">
 
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -40,7 +41,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".LoginPage"
+            android:name="com.howardhardy.pinfo.experimental.LoginPage"
             android:label="@string/title_activity_login"
             android:theme="@style/AppTheme">
             <intent-filter>
@@ -51,8 +52,8 @@
         </activity>
 
         <activity
-            android:name=".MapsActivity"
-            android:label="@string/title_activity_maps"
+            android:name="com.howardhardy.pinfo.experimental.MapsActivity"
+            android:label="@string/app_name"
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -61,8 +62,11 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="com.google.android.gms.ads.AdActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
+
         <activity
-            android:name=".SignActivity"
+            android:name="com.howardhardy.pinfo.experimental.SignActivity"
             android:label="@string/title_activity_sign"
             android:theme="@style/AppTheme">
             <intent-filter>

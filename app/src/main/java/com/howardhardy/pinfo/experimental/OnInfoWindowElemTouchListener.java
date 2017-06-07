@@ -1,10 +1,9 @@
-package com.howardhardy.pinfo;
+package com.howardhardy.pinfo.experimental;
 
 /**
  * Created by Howard on 01/04/2017.
  */
 
-import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;

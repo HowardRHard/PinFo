@@ -1,4 +1,4 @@
-package com.howardhardy.pinfo;
+package com.howardhardy.pinfo.experimental;
 
 /**
  * Created by Howard on 01/04/2017.
@@ -13,7 +13,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 public class MapWrapperLayout extends RelativeLayout {
     /**

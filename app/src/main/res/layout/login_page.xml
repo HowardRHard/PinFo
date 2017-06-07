@@ -27,20 +27,18 @@
         android:layout_alignParentEnd="true" />
 
     <EditText
+        android:id="@+id/emailBox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="textEmailAddress"
-        android:ems="10"
-        android:id="@+id/emailBox"
-        android:text="HowardrHardy@googlemail.com"
-        android:textAppearance="@android:style/TextAppearance.Holo.Medium"
-        android:textCursorDrawable="@null"
-        android:textColor="@android:color/holo_orange_light"
-        android:layout_marginBottom="21dp"
         android:layout_above="@+id/passBox"
+        android:layout_alignEnd="@+id/loginBtn"
         android:layout_alignStart="@+id/loginBtn"
-        android:layout_alignEnd="@+id/loginBtn">
-    </EditText>
+        android:layout_marginBottom="21dp"
+        android:ems="10"
+        android:inputType="textEmailAddress"
+        android:textAppearance="@android:style/TextAppearance.Holo.Medium"
+        android:textColor="@android:color/holo_orange_light"
+        android:textCursorDrawable="@null"></EditText>
 
     <Button
         android:text="Enter"
@@ -56,19 +54,18 @@
         android:layout_centerHorizontal="true" />
 
     <EditText
+        android:id="@+id/passBox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="textPassword"
-        android:ems="10"
-        android:id="@+id/passBox"
-        android:text="Mypass"
-        android:textAppearance="@android:style/TextAppearance.Holo.Medium"
-        android:textCursorDrawable="@null"
-        android:textColor="@android:color/holo_orange_light"
-        android:layout_marginBottom="69dp"
         android:layout_alignBottom="@+id/loginBtn"
+        android:layout_alignEnd="@+id/emailBox"
         android:layout_alignStart="@+id/loginBtn"
-        android:layout_alignEnd="@+id/emailBox" />
+        android:layout_marginBottom="69dp"
+        android:ems="10"
+        android:inputType="textPassword"
+        android:textAppearance="@android:style/TextAppearance.Holo.Medium"
+        android:textColor="@android:color/holo_orange_light"
+        android:textCursorDrawable="@null" />
 
     <TextView
         android:id="@+id/textView6"

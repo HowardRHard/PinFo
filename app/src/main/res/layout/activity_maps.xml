@@ -31,25 +31,42 @@
                     tools:layout_editor_absoluteY="78dp" />
             </LinearLayout>
 
-        <com.howardhardy.pinfo.MapWrapperLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:id="@+id/map_relative_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context=".MapsActivity" >
-
-            <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:map="http://schemas.android.com/apk/res-auto"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:id="@+id/map"
-                android:name="com.google.android.gms.maps.SupportMapFragment"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:context="com.howardhardy.pinfo.MapsActivity" />
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true">
 
-        </com.howardhardy.pinfo.MapWrapperLayout>
+                <!-- <ImageView
+                    android:id="@+id/imageView4"
+                    android:layout_width="600px"
+                    android:layout_height="600px"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    app:srcCompat="@drawable/web_hi_res_512" /> -->
 
+                <com.howardhardy.pinfo.experimental.MapWrapperLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:id="@+id/map_relative_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context=".MapsActivity" >
+
+                <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:map="http://schemas.android.com/apk/res-auto"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:id="@+id/map"
+                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:context="com.howardhardy.pinfo.experimental.MapsActivity" />
+
+                </com.howardhardy.pinfo.experimental.MapWrapperLayout>
+
+            </RelativeLayout>
         </LinearLayout>
+
+
 
     <!-- The navigation drawer -->
     <ListView android:id="@+id/left_drawer"
@@ -62,4 +79,5 @@
         android:background="@color/topBanner"/>
 
 </android.support.v4.widget.DrawerLayout>
+
 

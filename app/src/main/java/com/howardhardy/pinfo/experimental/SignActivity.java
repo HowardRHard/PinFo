@@ -1,4 +1,4 @@
-package com.howardhardy.pinfo;
+package com.howardhardy.pinfo.experimental;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -64,11 +64,16 @@ public class SignActivity extends FragmentActivity {
                 if(emailT.equals(emailB) && !emailT.equals("") && !emailB.equals("")) {
                     if(passT.equals(passB) && !passT.equals("") && !passB.equals("")) {
                         if(!fullNameEditText.equals("")){
+                            if (passT.toString().length() < 6 || passB.toString().length() < 6) {
+                                error = (TextView) findViewById(R.id.error_msg);
+                                error.setText("Please ensure your password is 6 characters or longer");
+                            } else {
                             Intent i = new Intent();
                             i.putExtra("emailPass", emailT + "  " + passT);
                             i.putExtra("fullName", fullNameEditText);
                             setResult(RESULT_OK,i);
                             finish();
+                            }
                         } else {
                             error = (TextView) findViewById(R.id.error_msg);
                             error.setText("Please make sure you don't leave your name blank.");

@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:971537010494:android:efe2b9bcb6dfad0b",
         "android_client_info": {
-          "package_name": "com.howardhardy.pinfo"
+          "package_name": "com.howardhardy.pinfo.experimental"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "971537010494-6ir8fkl4nvp8a1h9rpr8sgai6o8fl949.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.howardhardy.pinfo",
+            "package_name": "com.howardhardy.pinfo.experimental",
             "certificate_hash": "51417cc9bc8633c46a69e1656ad114717f5e1ded"
           }
         },

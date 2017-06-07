@@ -1,10 +1,12 @@
-package com.howardhardy.pinfo;
+package com.howardhardy.pinfo.experimental;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -31,6 +33,8 @@ public class LoginPage  extends FragmentActivity {
     private static final String TAG = "LoginPage";
     private String fullName;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
+    private boolean activePermission = false;
+    private static final int REQUEST_CODE_ASK_PERMISSIONS = 7;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,6 +43,8 @@ public class LoginPage  extends FragmentActivity {
         //Tracking sign in and out
         mAuth = FirebaseAuth.getInstance();
 
+
+        reqPermissions();
 
         //Checks the users login status
          mAuthListener = new FirebaseAuth.AuthStateListener() {
@@ -174,6 +180,38 @@ public class LoginPage  extends FragmentActivity {
                     }
                 });
             }
+        }
+    }
+
+
+    private void reqPermissions() {
+        //Checks to see if the permission has been granted
+        int hasLocPermission = ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION);
+        if (hasLocPermission != PackageManager.PERMISSION_GRANTED) {
+            //Requests the permission
+            this.requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_ASK_PERMISSIONS);
+            return;
+        }else{
+            activePermission = true;
+        }
+    }
+
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_CODE_ASK_PERMISSIONS:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission Granted
+                    activePermission = true;
+                } else {
+                    // Permission Denied
+                    activePermission = false;
+                    Toast.makeText(this, "ACCESS_FINE_LOCATION Denied", Toast.LENGTH_SHORT)
+                            .show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 }

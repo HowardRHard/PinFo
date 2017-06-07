@@ -1,4 +1,4 @@
-package com.howardhardy.pinfo;
+package com.howardhardy.pinfo.experimental;
 
 import android.app.Fragment;
 import android.content.Context;
@@ -14,6 +14,9 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.Status;
@@ -22,7 +25,7 @@ import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
-import static com.howardhardy.pinfo.R.id.checkBox;
+import static com.howardhardy.pinfo.experimental.R.id.checkBox;
 
 /**
  * Created by Howard on 20/03/2017.
@@ -57,6 +60,12 @@ public class PinFragment extends Fragment {
             final Button submitPin = (Button) rootView.findViewById(R.id.submitPin);
             final TextView errTextView = (TextView) rootView.findViewById(R.id.errTextView);
             final EditText titleTextView = (EditText) rootView.findViewById(R.id.titleEditText);
+
+            MobileAds.initialize(rootView.getContext(), "ca-app-pub-4075831064006070/2065245942");
+
+            AdView adView = (AdView) rootView.findViewById(R.id.adView);
+            AdRequest adRequest = new AdRequest.Builder().build();
+            adView.loadAd(adRequest);
 
             //This will remove the default google search widget
             rootView.findViewById(R.id.place_autocomplete_fragment).setVisibility(View.GONE);

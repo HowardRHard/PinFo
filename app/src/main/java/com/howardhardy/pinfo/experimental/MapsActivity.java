@@ -1,4 +1,4 @@
-package com.howardhardy.pinfo;
+package com.howardhardy.pinfo.experimental;
 
 import android.Manifest;
 import android.app.Fragment;
@@ -44,11 +44,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static bolts.Task.delay;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.InfoWindowAdapter{
 
@@ -126,6 +127,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //Sets up the toolbar
         Toolbar myToolbar = (Toolbar) findViewById(R.id.pinfoToolbar);
+        myToolbar.setTitle(R.string.title_activity_maps);
 
         ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, myToolbar, R.string.drawer_open, R.string.drawer_close) {
             public void onDrawerClosed(View v){
@@ -169,6 +171,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //Request permissions for the users location data
         reqPermissions();
+
     }
 
     @Override
@@ -458,10 +461,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                                                     //Attempt at auto deletion
 
-                                                    //if(Float.valueOf(marker.getTag().toString()) > -3) {
-                                                    //    marker.remove();
-                                                    //    removePin(pinKey);
-                                                    //}
+                                                    float valRatingFloat = Float.valueOf(textRating);
+                                                    if(valRatingFloat >= -5) {
+                                                        marker.hideInfoWindow();
+                                                        marker.setVisible(false);
+                                                        removePin(pinKey);
+                                                        marker.remove();
+                                                    }
                                                 }
                                                 //If they are voting the opposite to what they voted before then let them vote
                                                 else if(flag.equals("update")){
@@ -479,10 +485,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                                                     //Attempt at auto deletion
 
-                                                    //if(Float.valueOf(marker.getTag().toString()) > -3) {
-                                                    //    marker.remove();
-                                                    //    removePin(pinKey);
-                                                    //}
+                                                    float valRatingFloat = Float.valueOf(textRating);
+                                                    if(valRatingFloat >= -5) {
+                                                        marker.hideInfoWindow();
+                                                        marker.setVisible(false);
+                                                        removePin(pinKey);
+                                                        marker.remove();
+                                                    }
                                                 }
                                                 //If they are trying to revote then don't allow them to
                                                 else if(flag.equals("voted")){
@@ -573,9 +582,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     //This was my attempt at removing a pin, used in the auto delete part of the app
-    /*
+
     private void removePin(final String key){
-        final DatabaseReference removePinRef = database.getReference().child("pin");
+        final DatabaseReference removePinRef = database.getReference().child("pins");
 
         removePinRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -588,7 +597,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-    } */
+    }
 
     //Gets the users pins as well as their overall score
     private List<ArrayList<String>> getCurrentUsersPins() {

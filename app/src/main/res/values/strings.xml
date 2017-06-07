@@ -1,7 +1,7 @@
 <resources>
     <string name="pin_title">Enter:</string>
 
-    <string name="app_name">PinFo</string>
+    <string name="app_name">PinFo Exp</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_sign">Sign</string>
     <string name="title_activity_login">Login</string>
@@ -24,4 +24,5 @@
     <string name="drawer_close">Drawer close</string>
 
     <string name="server_client_id">971537010494-6ir8fkl4nvp8a1h9rpr8sgai6o8fl949.apps.googleusercontent.com</string>
+    <string name="banner_ad_unit_id">ca-app-pub-4075831064006070/2065245942</string>
 </resources>
